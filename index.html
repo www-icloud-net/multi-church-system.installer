@@ -29,13 +29,13 @@
   <meta name="twitter:description" content="Secure church management portal for Land of Dunamis Chapel." />
   <meta name="twitter:image" content="church-share-preview.png" />
   <meta name="twitter:image:alt" content="Land of Dunamis Chapel church logo and system preview" />
-  <link id="app-manifest" rel="manifest" href="manifest.webmanifest?v=2026-05-17-easy-deployment-generator" />
-  <link id="app-favicon" rel="icon" type="image/png" sizes="192x192" href="church-app-icon-192.png?v=2026-05-17-easy-deployment-generator" />
-  <link rel="icon" type="image/png" sizes="48x48" href="church-app-icon-48.png?v=2026-05-17-easy-deployment-generator" />
-  <link rel="icon" type="image/png" sizes="512x512" href="church-app-icon-512.png?v=2026-05-17-easy-deployment-generator" />
-  <link rel="apple-touch-icon" sizes="180x180" href="church-app-icon-180.png?v=2026-05-17-easy-deployment-generator" />
-  <link rel="shortcut icon" href="favicon.ico?v=2026-05-17-easy-deployment-generator" />
-  <meta name="msapplication-TileImage" content="church-app-icon-144.png?v=2026-05-17-easy-deployment-generator" />
+  <link id="app-manifest" rel="manifest" href="manifest.webmanifest?v=2026-05-17-generator-zip-fix" />
+  <link id="app-favicon" rel="icon" type="image/png" sizes="192x192" href="church-app-icon-192.png?v=2026-05-17-generator-zip-fix" />
+  <link rel="icon" type="image/png" sizes="48x48" href="church-app-icon-48.png?v=2026-05-17-generator-zip-fix" />
+  <link rel="icon" type="image/png" sizes="512x512" href="church-app-icon-512.png?v=2026-05-17-generator-zip-fix" />
+  <link rel="apple-touch-icon" sizes="180x180" href="church-app-icon-180.png?v=2026-05-17-generator-zip-fix" />
+  <link rel="shortcut icon" href="favicon.ico?v=2026-05-17-generator-zip-fix" />
+  <meta name="msapplication-TileImage" content="church-app-icon-144.png?v=2026-05-17-generator-zip-fix" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
@@ -218,8 +218,8 @@ let activeSessionToken = '';
 let activeSessionRole = '';
 let supabaseClient = createSupabaseClient();
 const publicSupabaseClient = createSupabaseClient();
-const APP_VERSION = '2026.05.17.easy-generator-superadmin-only';
-const STATIC_MANIFEST_HREF = 'manifest.webmanifest?v=2026-05-17-easy-generator-superadmin-only';
+const APP_VERSION = '2026.05.17.safe-isolated-generator';
+const STATIC_MANIFEST_HREF = 'manifest.webmanifest?v=2026-05-17-generator-zip-fix';
 const STATIC_CHURCH_LOGO_48 = 'church-app-icon-48.png';
 const STATIC_CHURCH_LOGO_180 = 'church-app-icon-180.png';
 const STATIC_CHURCH_LOGO_192 = 'church-app-icon-192.png';
@@ -911,7 +911,7 @@ function applyTheme(settings={}) {
   const safeIcon = absolutePreviewUrl(settings.logo_url || STATIC_CHURCH_LOGO_192, STATIC_CHURCH_LOGO_192);
   if (favicon) favicon.href = safeIcon;
   document.querySelectorAll('link[rel="apple-touch-icon"]').forEach(link => { link.href = absolutePreviewUrl(STATIC_CHURCH_LOGO_180, STATIC_CHURCH_LOGO_180); });
-  document.querySelectorAll('link[rel="shortcut icon"]').forEach(link => { link.href = 'favicon.ico?v=2026-05-17-easy-deployment-generator'; });
+  document.querySelectorAll('link[rel="shortcut icon"]').forEach(link => { link.href = 'favicon.ico?v=2026-05-17-generator-zip-fix'; });
 }
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -1898,6 +1898,33 @@ function ImageUploadInput({ value='', onChange, folder='general', shape='rounded
     {value ? <img src={value} className={`w-16 h-16 object-cover border bg-white ${shape}`} /> : <div className={`w-16 h-16 border bg-slate-50 flex items-center justify-center text-slate-400 ${shape}`}><i className="fas fa-image"></i></div>}
     <div className="flex flex-wrap gap-2">
       <label className={`btn btn-outline cursor-pointer ${uploading ? 'opacity-70 pointer-events-none' : ''}`}><i className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i>{uploading ? 'Uploading' : 'Upload'}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={handleFile} /></label>
+      {value && <button type="button" className="btn btn-secondary" onClick={() => onChange('')}><i className="fas fa-xmark"></i>Remove</button>}
+    </div>
+  </div>;
+}
+function LocalImageUploadInput({ value='', onChange, shape='rounded-xl' }) {
+  const { notify } = React.useContext(DataContext);
+  const [loading, setLoading] = React.useState(false);
+  const handleFile = async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    try {
+      validateImageFile(file);
+      const dataUrl = await fileToDataUrl(file);
+      onChange(dataUrl);
+      notify('success', 'New church logo selected.');
+    } catch (error) {
+      notify('error', error?.message || 'Logo selection failed.');
+    } finally {
+      event.target.value = '';
+      setLoading(false);
+    }
+  };
+  return <div className="flex items-center gap-3">
+    {value ? <img src={value} className={`w-16 h-16 object-cover border bg-white ${shape}`} /> : <div className={`w-16 h-16 border bg-slate-50 flex items-center justify-center text-slate-400 ${shape}`}><i className="fas fa-image"></i></div>}
+    <div className="flex flex-wrap gap-2">
+      <label className={`btn btn-outline cursor-pointer ${loading ? 'opacity-70 pointer-events-none' : ''}`}><i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i>{loading ? 'Loading' : 'Select Logo'}<input type="file" accept="image/*" className="hidden" disabled={loading} onChange={handleFile} /></label>
       {value && <button type="button" className="btn btn-secondary" onClick={() => onChange('')}><i className="fas fa-xmark"></i>Remove</button>}
     </div>
   </div>;
@@ -3285,7 +3312,8 @@ function dosDateTime(date=new Date()) {
   return { time, day };
 }
 function writeZipHeader(signature, fields, nameBytes, extraBytes=new Uint8Array(0)) {
-  const size = 4 + fields.length * 2 + nameBytes.length + extraBytes.length;
+  const fieldBytes = safeArray(fields).reduce((sum, field) => sum + (field.bits === 32 ? 4 : 2), 0);
+  const size = 4 + fieldBytes + nameBytes.length + extraBytes.length;
   const bytes = new Uint8Array(size);
   const view = new DataView(bytes.buffer);
   view.setUint32(0, signature, true);
@@ -3337,10 +3365,13 @@ async function createZipBlob(files=[]) {
   const end = new Uint8Array(22);
   const view = new DataView(end.buffer);
   view.setUint32(0, 0x06054b50, true);
+  view.setUint16(4, 0, true);
+  view.setUint16(6, 0, true);
   view.setUint16(8, files.length, true);
   view.setUint16(10, files.length, true);
   view.setUint32(12, centralSize, true);
   view.setUint32(16, centralOffset, true);
+  view.setUint16(20, 0, true);
   return new Blob([...chunks, ...central, end], { type: 'application/zip' });
 }
 function downloadBlob(blob, filename='download.zip') {
@@ -3353,8 +3384,19 @@ function downloadBlob(blob, filename='download.zip') {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+function validateChurchPackagePayload(settings={}, options={}) {
+  const churchName = String(settings.church_name || '').trim();
+  const logoUrl = String(settings.logo_url || '').trim();
+  const supabaseUrl = String(options.supabase_url || '').trim();
+  const supabaseKey = String(options.supabase_anon_key || '').trim();
+  if (!churchName) throw new Error('Enter the new church name.');
+  if (!logoUrl) throw new Error('Select the new church logo.');
+  if (!supabaseUrl) throw new Error('Enter the new church Supabase Project URL.');
+  if (!supabaseKey) throw new Error('Enter the new church Supabase Anon Key.');
+}
 async function buildChurchFrontendPackageFiles(settings={}, options={}) {
-  const logoSource = window.__churchLogoPackageDataUrl || settings.logo_url || STATIC_CHURCH_LOGO_512;
+  validateChurchPackagePayload(settings, options);
+  const logoSource = String(settings.logo_url || '').trim();
   const img = await loadDeploymentImage(logoSource);
   const files = [];
   const iconBlobs = new Map();
@@ -3403,29 +3445,9 @@ function SettingsManager() {
   const { data, setChurchSettings, notify } = React.useContext(DataContext);
   const { session } = React.useContext(SessionContext);
   const [form, setForm] = React.useState(data.churchSettings);
-  const [deployOptions, setDeployOptions] = React.useState({ app_short_name: shortAppName(data.churchSettings.church_name), supabase_url: SUPABASE_URL, supabase_anon_key: SUPABASE_ANON_KEY });
   React.useEffect(() => setForm(data.churchSettings), [data.churchSettings]);
-  React.useEffect(() => setDeployOptions(current => ({ ...current, app_short_name: current.app_short_name || shortAppName(data.churchSettings.church_name) })), [data.churchSettings.church_name]);
   const signatureScale = Math.min(220, Math.max(70, Number(form.general_overseer_signature_scale || 135)));
   const save = async e => { e.preventDefault(); await setChurchSettings(ensureDailyVerseSettings({ ...form, general_overseer_signature_scale: signatureScale })); };
-  const buildSettingsPayload = () => ensureDailyVerseSettings({ ...form, general_overseer_signature_scale: signatureScale });
-  const generateZipPackage = async () => {
-    try {
-      await downloadChurchFrontendZip(buildSettingsPayload(), deployOptions);
-      notify('success', 'GitHub package generated.');
-    } catch (error) {
-      notify('error', error?.message || 'Package generation failed.');
-    }
-  };
-  const exportOutputFolder = async () => {
-    try {
-      const result = await saveChurchFrontendOutputFolder(buildSettingsPayload(), deployOptions);
-      notify('success', result === 'folder' ? 'GitHub output folder created.' : 'GitHub package generated.');
-    } catch (error) {
-      if (error?.name === 'AbortError') return;
-      notify('error', error?.message || 'Package export failed.');
-    }
-  };
   return <div className="space-y-4">
     <SectionHeader title="Church Settings" />
     <form onSubmit={save} className="card p-5 space-y-4">
@@ -3462,23 +3484,76 @@ function SettingsManager() {
       </div>
       <div className="flex justify-end"><button className="btn btn-primary"><i className="fas fa-save"></i>Save Theme and Settings</button></div>
     </form>
-    {session.role === 'superadmin' && <div className="card p-5 space-y-4">
+  </div>;
+}
+
+function NewChurchGitHubPackageManager() {
+  const { data, notify } = React.useContext(DataContext);
+  const [packageForm, setPackageForm] = React.useState({ church_name: '', address: '', contact: '', location: '', logo_url: '', app_short_name: '', supabase_url: '', supabase_anon_key: '' });
+  const updatePackageField = (key, value) => setPackageForm(current => {
+    const next = { ...current, [key]: value };
+    if (key === 'church_name' && !current.app_short_name) next.app_short_name = shortAppName(value);
+    return next;
+  });
+  const buildPackageSettingsPayload = () => {
+    const savedCurrentChurchSettings = data.churchSettings || defaultChurch;
+    const savedSignatureScale = Math.min(220, Math.max(70, Number(savedCurrentChurchSettings.general_overseer_signature_scale || 135)));
+    return ensureDailyVerseSettings({
+      ...savedCurrentChurchSettings,
+      church_name: String(packageForm.church_name || '').trim(),
+      address: String(packageForm.address || '').trim(),
+      contact: String(packageForm.contact || '').trim(),
+      location: String(packageForm.location || '').trim(),
+      logo_url: String(packageForm.logo_url || '').trim(),
+      general_overseer_signature_scale: savedSignatureScale
+    });
+  };
+  const buildPackageOptionsPayload = () => ({
+    app_short_name: String(packageForm.app_short_name || '').trim(),
+    supabase_url: String(packageForm.supabase_url || '').trim(),
+    supabase_anon_key: String(packageForm.supabase_anon_key || '').trim()
+  });
+  const generateZipPackage = async () => {
+    try {
+      await downloadChurchFrontendZip(buildPackageSettingsPayload(), buildPackageOptionsPayload());
+      notify('success', 'New church GitHub package generated.');
+    } catch (error) {
+      notify('error', error?.message || 'Package generation failed.');
+    }
+  };
+  const exportOutputFolder = async () => {
+    try {
+      const result = await saveChurchFrontendOutputFolder(buildPackageSettingsPayload(), buildPackageOptionsPayload());
+      notify('success', result === 'folder' ? 'New church output folder created.' : 'New church GitHub package generated.');
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      notify('error', error?.message || 'Package export failed.');
+    }
+  };
+  return <div className="space-y-4">
+    <SectionHeader title="New Church GitHub Package" />
+    <div className="card p-5 space-y-4">
       <div className="flex items-center gap-3">
         <span className="icon-modern icon-indigo"><i className="fas fa-box-open"></i></span>
         <div>
           <h3 className="font-extrabold text-slate-900">New Church GitHub Package</h3>
         </div>
       </div>
-      <div className="grid md:grid-cols-3 gap-4">
-        <Field label="App Short Name"><input className="input" value={deployOptions.app_short_name || ''} onChange={e => setDeployOptions({ ...deployOptions, app_short_name: e.target.value })} /></Field>
-        <Field label="Supabase Project URL"><input className="input" value={deployOptions.supabase_url || ''} onChange={e => setDeployOptions({ ...deployOptions, supabase_url: e.target.value })} /></Field>
-        <Field label="Supabase Anon Key"><input className="input" value={deployOptions.supabase_anon_key || ''} onChange={e => setDeployOptions({ ...deployOptions, supabase_anon_key: e.target.value })} /></Field>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Field label="New Church Name"><input className="input" value={packageForm.church_name || ''} onChange={e => updatePackageField('church_name', e.target.value)} /></Field>
+        <Field label="New Church Logo"><LocalImageUploadInput value={packageForm.logo_url || ''} onChange={logo_url => updatePackageField('logo_url', logo_url)} /></Field>
+        <Field label="New Church Address"><input className="input" value={packageForm.address || ''} onChange={e => updatePackageField('address', e.target.value)} /></Field>
+        <Field label="New Church Contact"><input className="input" value={packageForm.contact || ''} onChange={e => updatePackageField('contact', e.target.value)} /></Field>
+        <Field label="New Church Location"><input className="input" value={packageForm.location || ''} onChange={e => updatePackageField('location', e.target.value)} /></Field>
+        <Field label="App Short Name"><input className="input" value={packageForm.app_short_name || ''} onChange={e => updatePackageField('app_short_name', e.target.value)} /></Field>
+        <Field label="Supabase Project URL"><input className="input" value={packageForm.supabase_url || ''} onChange={e => updatePackageField('supabase_url', e.target.value)} /></Field>
+        <Field label="Supabase Anon Key"><input className="input" value={packageForm.supabase_anon_key || ''} onChange={e => updatePackageField('supabase_anon_key', e.target.value)} /></Field>
       </div>
       <div className="flex flex-wrap justify-end gap-2">
         <button type="button" className="btn btn-outline" onClick={generateZipPackage}><i className="fas fa-file-zipper"></i>Download GitHub ZIP</button>
         <button type="button" className="btn btn-primary" onClick={exportOutputFolder}><i className="fas fa-folder-plus"></i>Create Output Folder</button>
       </div>
-    </div>}
+    </div>
   </div>;
 }
 function ChatManagement({ role, linkedId }) {
@@ -3909,7 +3984,7 @@ function linkedUserName(data, role, linkedId) {
   return memberName(data, linkedId);
 }
 function roleNavItems(role) {
-  if (role === 'superadmin') return [['dashboard','Master Dashboard','gauge-high'], ['churchadmin','Church Admin Credentials','user-shield'], ['access','Platform Access Control','lock'], ['license','License Management','certificate'], ['credentials','All Accounts','key'], ['backup','Backup and Restore','database'], ['audit','Activity Log','clock-rotate-left'], ['settings','Church Settings','gear']];
+  if (role === 'superadmin') return [['dashboard','Master Dashboard','gauge-high'], ['churchadmin','Church Admin Credentials','user-shield'], ['access','Platform Access Control','lock'], ['license','License Management','certificate'], ['credentials','All Accounts','key'], ['backup','Backup and Restore','database'], ['audit','Activity Log','clock-rotate-left'], ['settings','Church Settings','gear'], ['newchurchpackage','New Church GitHub Package','box-open']];
   if (role === 'admin') return [['dashboard','Dashboard','gauge-high'], ['leadership','Leadership','chart-line'], ['qr','QR Attendance','qrcode'], ['import','Bulk Import','file-import'], ['communication','Communication','paper-plane'], ['license','License Plan Usage','certificate'], ['members','Members','users'], ['households','Households','house'], ['ministries','Ministries','people-group'], ['ministers','Ministers','user-tie'], ['financeofficers','Finance Officers','calculator'], ['services','Services','church'], ['attendance','Attendance','clipboard-check'], ['visitors','Visitors','address-card'], ['care','Prayer Requests','hands-praying'], ['visits','Pastoral Visits','handshake'], ['welfare','Welfare','hand-holding-heart'], ['finance','Finance','wallet'], ['events','Events','calendar-days'], ['assignments','Ministry Assignments','sitemap'], ['documents','Documents','folder-open'], ['certificates','Certificates','certificate'], ['announcements','Announcements','bullhorn'], ['reminders','Reminders','bell'], ['notifications','Notifications','bell'], ['reports','Reports','chart-column'], ['backup','Backup and Restore','database'], ['audit','Activity Log','clock-rotate-left'], ['credentials','Accounts','key'], ['chat','Chat','comments'], ['settings','Settings','gear']];
   if (role === 'senior_pastor') return [['dashboard','Dashboard','gauge-high'], ['leadership','Leadership','chart-line'], ['qr','QR Attendance','qrcode'], ['communication','Communication','paper-plane'], ['members','Members','users'], ['services','Services','church'], ['attendance','Attendance','clipboard-check'], ['visitors','Visitors','address-card'], ['care','Prayer Requests','hands-praying'], ['visits','Pastoral Visits','handshake'], ['welfare','Welfare','hand-holding-heart'], ['finance','Finance Summary','chart-pie'], ['events','Events','calendar-days'], ['documents','Documents','folder-open'], ['certificates','Certificates','certificate'], ['announcements','Announcements','bullhorn'], ['reminders','Reminders','bell'], ['notifications','Notifications','bell'], ['reports','Reports','chart-column'], ['chat','Chat','comments']];
   if (role === 'pastor') return [['dashboard','Dashboard','gauge-high'], ['leadership','Leadership','chart-line'], ['qr','QR Attendance','qrcode'], ['communication','Communication','paper-plane'], ['members','Members','users'], ['attendance','Attendance','clipboard-check'], ['visitors','Visitors','address-card'], ['care','Prayer Requests','hands-praying'], ['visits','Pastoral Visits','handshake'], ['welfare','Welfare','hand-holding-heart'], ['events','Events','calendar-days'], ['certificates','Certificates','certificate'], ['announcements','Announcements','bullhorn'], ['reminders','Reminders','bell'], ['notifications','Notifications','bell'], ['reports','Reports','chart-column'], ['chat','Chat','comments']];
@@ -4282,6 +4357,7 @@ function SuperAdminDashboard({ activeNav }) {
   if (activeNav === 'backup') return <BackupRestoreCenter />;
   if (activeNav === 'audit') return <ActivityLogCenter />;
   if (activeNav === 'settings') return <SettingsManager />;
+  if (activeNav === 'newchurchpackage') return <NewChurchGitHubPackageManager />;
   return <SuperAdminMaintenanceDashboard />;
 }
 function ChurchAccessLockedNotice({ role }) {
